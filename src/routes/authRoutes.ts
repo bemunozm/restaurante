@@ -32,10 +32,35 @@ router.post(
 );
 
 //Confirmar cuenta
-router.post('/confirm-account',
-    body('token').notEmpty().withMessage('El token es obligatorio'),
-    handleInputErrors,
-    AuthController.confirmAccount
-)
+router.post(
+  "/confirm-account",
+  body("token").notEmpty().withMessage("El token es obligatorio"),
+  handleInputErrors,
+  AuthController.confirmAccount
+);
+
+//Iniciar sesion
+router.post(
+  "/login",
+
+  body("email").isEmail().withMessage("Agrega un correo valido"),
+
+  body("password").notEmpty().withMessage("El password es obligatorio"),
+
+  handleInputErrors,
+
+  AuthController.login
+);
+
+//SOLICITAR NUEVO CODIGO DE CONFIRMACION
+router.post(
+  "/request-code",
+
+  body("email").isEmail().withMessage("Agrega un correo valido"),
+
+  handleInputErrors,
+
+  AuthController.requestConfirmationCode
+);
 
 export default router;
