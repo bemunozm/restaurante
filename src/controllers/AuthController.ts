@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import User from "../models/User";
 import Token from "../models/Token";
+import { AuthEmail } from "../emails/AuthEmail";
 
 export class AuthController {
   static createAccount = async (req: Request, res: Response) => {
@@ -24,6 +25,9 @@ export class AuthController {
       ).toString();
       token.token = generatedToken;
       token.user = user.id; //GUARDAR USUARIO
+
+      //Enviar email
+      AuthEmail.sendEmailConfirmation({email: user.email, name: user.name, token: token.token});
 
       await user.save(); // Guarda el usuario en la base de datos
       await token.save(); // Guarda el token en la base de datos
