@@ -5,6 +5,7 @@ import Token from "../models/Token";
 import { AuthEmail } from "../emails/AuthEmail";
 
 export class AuthController {
+    //CREAR CUENTA
   static createAccount = async (req: Request, res: Response) => {
     try {
       const user = new User(req.body); //VALIDAR QUE EL EMAIL NO ESTE REPETIDO
@@ -15,8 +16,8 @@ export class AuthController {
       } //HASHEAR PASSWORDS //await pausa la ejecucion de la funcion hasta que se complete el salt
 
       const salt = await bcrypt.genSalt(10);
-       // Genera un salt para encriptar la contraseña antes de hashearla
-     //await pausa la ejecucion de la funcion hasta que se complete el hash
+      // Genera un salt para encriptar la contraseña antes de hashearla
+      //await pausa la ejecucion de la funcion hasta que se complete el hash
       user.password = await bcrypt.hash(req.body.password, salt); // Hashea la contraseña antes de guardarla en la base de datos //GENERAR TOKEN y guardarlo en la base de datos
 
       const token = new Token();
@@ -27,7 +28,11 @@ export class AuthController {
       token.user = user.id; //GUARDAR USUARIO
 
       //Enviar email
-      AuthEmail.sendEmailConfirmation({email: user.email, name: user.name, token: token.token});
+      AuthEmail.sendEmailConfirmation({
+        email: user.email,
+        name: user.name,
+        token: token.token,
+      });
 
       await user.save(); // Guarda el usuario en la base de datos
       await token.save(); // Guarda el token en la base de datos
@@ -36,6 +41,33 @@ export class AuthController {
     } catch (error) {
       console.log(error);
       res.status(500).json({ error: "Hubo un error creando la cuenta" });
+    }
+  };
+
+  //CONFIRMAR CUENTA
+  static confirmAccount = async (req: Request, res: Response) => {
+    try {
+      const tokenExists = await Token.findOne({ token: req.body.token });
+
+      if (!tokenExists) {
+        return res.status(404).json({ error: "Token no encontrado" });
+      }
+
+      const user = await User.findById(tokenExists.user);
+      if (!user) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      }
+
+      user.confirmed = true;
+
+      await user.save();
+
+      await tokenExists.deleteOne();
+
+      res.send("Cuenta confirmada correctamente");
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "Hubo un error confirmando la cuenta" });
     }
   };
 }

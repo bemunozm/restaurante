@@ -10,6 +10,7 @@ const router = Router();
 
 //Aqui iran todas las rutas de autenticacion
 
+//Crear cuenta
 router.post(
   "/create-account",
   body("name").notEmpty().withMessage("El nombre es obligatorio"),
@@ -29,5 +30,12 @@ router.post(
   handleInputErrors, //Utiliza el middleware para manejar los errores
   AuthController.createAccount //Llama al controlador para loguear al usuario en caso de que no haya errores
 );
+
+//Confirmar cuenta
+router.post('/confirm-account',
+    body('token').notEmpty().withMessage('El token es obligatorio'),
+    handleInputErrors,
+    AuthController.confirmAccount
+)
 
 export default router;
