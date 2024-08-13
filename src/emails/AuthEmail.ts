@@ -21,5 +21,23 @@ export class AuthEmail {
 `,
     });
     console.log("Mensaje enviado correctamente", info.messageId);
-  };
+  }
+
+  static sendPasswordResetToken = async ( data : EmailDataType) => {
+    const info = await transporter.sendMail({
+        from: 'Restaurante <admin@restaurante.com>',
+        to: data.email,
+        subject: 'Restaurante - Restablecer contraseña',
+        text: 'Restaurante - Restablecer contraseña',
+        html: `<p>Hola: ${data.name}, has solicitado restablecer tu password</p>
+        <p>Visita el siguiente enlace:</p>
+        <a href="${process.env.FRONTEND_URL}/auth/new-password">Restablecer contraseña</a>
+        <p>E ingresa el siguiente código: <b>${data.token}</b></p>
+        <p>Este token expira en 10 minutos</p>
+        `
+        
+    });     
+
+    console.log('Message enviado correctamente', info.messageId);
+}
 }

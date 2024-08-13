@@ -167,4 +167,92 @@ export class AuthController {
       res.status(500).json({ error: "Hubo un error creando la cuenta" });
     }
   };
+
+  //RESTABLECER CONTRASEÑA
+  static forgotPassword = async (req: Request, res: Response) => {
+    try {
+      const user = await User.findOne({ email: req.body.email }); //VALIDAR QUE EL EMAIL NO ESTE REPETIDO
+
+      if (!user) {
+        const error = new Error("El usuario no esta registrado");
+
+        return res.status(409).json({ error: error.message }); //-> 409 Conflict
+      } //GENERAR TOKEN
+
+      const token = new Token();
+
+      const generatedToken = await Math.floor(
+        100000 + Math.random() * 900000
+      ).toString();
+
+      token.token = generatedToken;
+
+      token.user = user.id; //Enviar email
+
+      AuthEmail.sendPasswordResetToken({
+        email: user.email,
+        name: user.name,
+        token: token.token,
+      }); //GUARDAR USUARIO
+
+      await user.save(); // Guarda el usuario en la base de datos
+
+      await token.save(); // Guarda el token en la base de datos
+
+      res.send("Se envio un nuevo token a tu e-mail");
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({ error: "Hubo un error creando la cuenta" });
+    }
+  };
+
+  //VALIDAR TOKEN
+  static validateToken = async (req: Request, res: Response) => {
+    try {
+      const tokenExists = await Token.findOne({ token: req.body.token });
+
+      if (!tokenExists) {
+        return res.status(404).json({ error: "Token no encontrado" });
+      }
+
+      res.send("Token validado, puedes cambiar tu contraseña");
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({ error: "Hubo un error validando el token" });
+    }
+  };
+
+  //ACTUALIZAR CONTRASEÑA
+  static updatePasswordWithToken = async (req: Request, res: Response) => {
+    try {
+      const tokenExists = await Token.findOne({ token: req.params.token });
+
+      if (!tokenExists) {
+        return res.status(404).json({ error: "Token no encontrado" });
+      }
+
+      const user = await User.findById(tokenExists.user);
+
+      if (!user) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      } //HASHEAR PASSWORDS //await pausa la ejecucion de la funcion hasta que se complete el salt
+
+      const salt = await bcrypt.genSalt(10); // Genera un salt para encriptar la contraseña antes de hashearla //await pausa la ejecucion de la funcion hasta que se complete el hash
+
+      user.password = await bcrypt.hash(req.body.password, salt); // Hashea la contraseña antes de guardarla en la base de datos
+
+      user.save();
+
+      tokenExists.deleteOne();
+
+      res.send("El password se modifico correctamente");
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({ error: "Hubo un error actualizando la pass" });
+    }
+  }
+  
 }
