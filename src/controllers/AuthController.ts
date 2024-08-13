@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import User from "../models/User";
 import Token from "../models/Token";
 import { AuthEmail } from "../emails/AuthEmail";
+import { generateJWT } from "../utils/jwt";
 
 export class AuthController {
   //CREAR CUENTA
@@ -114,7 +115,9 @@ export class AuthController {
         return res.status(401).json({ error: error.message });
       }
 
-      res.send("Usuario logueado correctamente");
+      const token = generateJWT({id: user._id})
+
+        res.send(token)
     } catch (error) {
       console.log(error);
       res.status(500).json({ error: "Hubo un error confirmando la cuenta" });
