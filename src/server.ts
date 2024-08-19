@@ -1,20 +1,25 @@
 import express from 'express';
-import dotenv from 'dotenv'; //Para manejar las variables de entorno
-import { connectDB } from './config/db'; //Para ejecutar la conexion 
-import authRoutes from './routes/authRoutes'; //Rutas de autenticacion
-import clientRoutes from './routes/clientRoutes'; //Rutas de autenticacion cliente
-import sessionRoutes from './routes/sessionRoutes'; //Rutas de sesion
+import dotenv from 'dotenv';
+import { connectDB } from './config/db';
+import authRoutes from './routes/authRoutes';
+import morgan from 'morgan';
+import cors from 'cors';
 
-dotenv.config(); //variables de entorno
 
-connectDB(); //Llama la funcion para conectarse a la base de datos
+// Configurar variables de entorno y conectar a la base de datos
+dotenv.config();
+connectDB();
 
 const app = express();
+app.use(cors());
 
+// Logging
+app.use(morgan('dev'));
+
+// Leer datos de formularios
 app.use(express.json());
 
+// Rutas de la API
 app.use('/api/auth', authRoutes);
-app.use('/api/client', clientRoutes);
-app.use('/api/session', sessionRoutes);
 
 export default app;

@@ -1,261 +1,268 @@
-import { Request, Response } from "express";
-import bcrypt from "bcrypt";
-import User from "../models/User";
-import Token from "../models/Token";
-import { AuthEmail } from "../emails/AuthEmail";
-import { generateJWT } from "../utils/jwt";
+import type { Request, Response } from 'express';
+import User from '../models/User';
+import Token from '../models/Token';
+import { checkPassword, hashPassword } from '../utils/auth';
+import { generateToken } from '../utils/token';
+import { AuthEmail } from '../emails/AuthEmail';
+import { generateJWT } from '../utils/jwt';
 
 export class AuthController {
-  //CREAR CUENTA
-  static createAccount = async (req: Request, res: Response) => {
-    try {
-      const user = new User(req.body); //VALIDAR QUE EL EMAIL NO ESTE REPETIDO
-      const userExists = await User.findOne({ email: req.body.email });
-      if (userExists) {
-        const error = new Error("El correo ya esta registrado");
-        return res.status(409).json({ error: error.message }); //-> 409 Conflict
-      } //HASHEAR PASSWORDS //await pausa la ejecucion de la funcion hasta que se complete el salt
 
-      const salt = await bcrypt.genSalt(10);
-      // Genera un salt para encriptar la contraseña antes de hashearla
-      //await pausa la ejecucion de la funcion hasta que se complete el hash
-      user.password = await bcrypt.hash(req.body.password, salt); // Hashea la contraseña antes de guardarla en la base de datos //GENERAR TOKEN y guardarlo en la base de datos
+    static createAccount = async (req: Request, res: Response) => {
+        try {
+            const { password, email } = req.body
 
-      const token = new Token();
-      const generatedToken = await Math.floor(
-        100000 + Math.random() * 900000
-      ).toString();
-      token.token = generatedToken;
-      token.user = user.id; //GUARDAR USUARIO
+            // Prevenir duplicados
+            const userExists = await User.findOne({ email })
+            if (userExists) {
+                const error = new Error('El Usuario ya esta registrado')
+                return res.status(409).json({ error: error.message })
+            }
 
-      //Enviar email
-      AuthEmail.sendEmailConfirmation({
-        email: user.email,
-        name: user.name,
-        token: token.token,
-      });
+            // Crea un usuario
+            const user = new User(req.body)
 
-      await user.save(); // Guarda el usuario en la base de datos
-      await token.save(); // Guarda el token en la base de datos
+            // Hash Password
+            user.password = await hashPassword(password)
 
-      res.send("Cuenta creada, revisa tu email para confirmarla");
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Hubo un error creando la cuenta" });
+            // Generar el token
+            const token = new Token()
+            token.token = generateToken()
+            token.user = user.id
+
+            // enviar el email
+            AuthEmail.sendConfirmationEmail({
+                email: user.email,
+                name: user.name,
+                token: token.token
+            })
+
+            await Promise.allSettled([user.save(), token.save()])
+            res.send('Cuenta creada, revisa tu email para confirmarla')
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' })
+        }
     }
-  };
 
-  //CONFIRMAR CUENTA
-  static confirmAccount = async (req: Request, res: Response) => {
-    try {
-      const tokenExists = await Token.findOne({ token: req.body.token });
+    static confirmAccount = async (req: Request, res: Response) => {
+        try {
+            const { token } = req.body
 
-      if (!tokenExists) {
-        return res.status(404).json({ error: "Token no encontrado" });
-      }
+            const tokenExists = await Token.findOne({ token })
+            if (!tokenExists) {
+                const error = new Error('Token no válido')
+                return res.status(404).json({ error: error.message })
+            }
 
-      const user = await User.findById(tokenExists.user);
-      if (!user) {
-        return res.status(404).json({ error: "Usuario no encontrado" });
-      }
+            const user = await User.findById(tokenExists.user)
+            user.confirmed = true
 
-      user.confirmed = true;
-
-      await user.save();
-
-      await tokenExists.deleteOne();
-
-      res.send("Cuenta confirmada correctamente");
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Hubo un error confirmando la cuenta" });
+            await Promise.allSettled([user.save(), tokenExists.deleteOne()])
+            res.send('Cuenta confirmada correctamente')
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' })
+        }
     }
-  };
 
-  //INICIAR SESION
-  static login = async (req: Request, res: Response) => {
-    try {
-      //VALIDAR QUE EL USUARIO EXISTA
-      const user = await User.findOne({ email: req.body.email }); //SI EL USUARIO NO EXISTE
+    static login = async (req: Request, res: Response) => {
+        try {
+            const { email, password } = req.body
+            const user = await User.findOne({ email })
+            if (!user) {
+                const error = new Error('Usuario no encontrado')
+                return res.status(404).json({ error: error.message })
+            }
 
-      if (!user) {
-        const error = new Error("Usuario no encontrado");
-        return res.status(404).json({ error: error.message });
-      } //VALIDAR QUE EL USUARIO HAYA CONFIRMADO SU CUENTA
+            if (!user.confirmed) {
+                const token = new Token()
+                token.user = user.id
+                token.token = generateToken()
+                await token.save()
 
-      if (!user.confirmed) {
-        //REENVIAR EMAIL DE CONFIRMACION
+                // enviar el email
+                AuthEmail.sendConfirmationEmail({
+                    email: user.email,
+                    name: user.name,
+                    token: token.token
+                })
 
-        //Generar un nuevo token
-        const token = new Token();
-        token.user = user.id;
-        token.token = Math.floor(100000 + Math.random() * 900000).toString(); //lo guarda en bd
+                const error = new Error('La cuenta no ha sido confirmada, hemos enviado un e-mail de confirmación')
+                return res.status(401).json({ error: error.message })
+            }
 
-        await token.save(); //enviar email
+            // Revisar password
+            const isPasswordCorrect = await checkPassword(password, user.password)
+            if(!isPasswordCorrect) {
+                const error = new Error('Password Incorrecto')
+                return res.status(401).json({ error: error.message })
+            }
 
-        AuthEmail.sendEmailConfirmation({
-          email: user.email,
-          name: user.name,
-          token: token.token,
-        });
+            const token = generateJWT({id: user._id})
 
-        const error = new Error(
-          "La cuenta no ha sido confirmada, hemos enviado un e-mail de confirmacion a tu correo"
-        );
-        return res.status(401).json({ error: error.message });
-      } //VALIDAR QUE EL PASSWORD SEA CORRECTO
+            res.send(token)
 
-      const validPassword = await bcrypt.compare(
-        req.body.password,
-        user.password
-      ); //SI EL PASSWORD NO ES CORRECTO
-
-      if (!validPassword) {
-        const error = new Error("Contraseña incorrecta");
-        return res.status(401).json({ error: error.message });
-      }
-
-      const token = generateJWT({id: user.id})
-
-        res.send(token)
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Hubo un error confirmando la cuenta" });
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' })
+        }
     }
-  };
 
-  //SOLICITAR NUEVO CODIGO DE CONFIRMACION
-  static requestConfirmationCode = async (req: Request, res: Response) => {
-    try {
-      const user = await User.findOne({ email: req.body.email }); //VALIDAR QUE EL EMAIL NO ESTE REPETIDO
+    static requestConfirmationCode = async (req: Request, res: Response) => {
+        try {
+            const { email } = req.body
 
-      const userExists = await User.findOne({ email: req.body.email });
+            // Usuario existe
+            const user = await User.findOne({ email })
+            if (!user) {
+                const error = new Error('El Usuario no esta registrado')
+                return res.status(404).json({ error: error.message })
+            }
 
-      if (!userExists) {
-        const error = new Error("El usuario no esta registrado");
+            if(user.confirmed) {
+                const error = new Error('El Usuario ya esta confirmado')
+                return res.status(403).json({ error: error.message })
+            }
 
-        return res.status(409).json({ error: error.message }); //-> 409 Conflict
-      }
+            // Generar el token
+            const token = new Token()
+            token.token = generateToken()
+            token.user = user.id
 
-      if (user.confirmed) {
-        const error = new Error("La cuenta ya esta confirmada");
+            // enviar el email
+            AuthEmail.sendConfirmationEmail({
+                email: user.email,
+                name: user.name,
+                token: token.token
+            })
 
-        return res.status(409).json({ error: error.message }); //-> 409 Conflict
-      } //GENERAR TOKEN
+            await Promise.allSettled([user.save(), token.save()])
 
-      const token = new Token();
-
-      const generatedToken = await Math.floor(
-        100000 + Math.random() * 900000
-      ).toString();
-
-      token.token = generatedToken;
-
-      token.user = user.id; //Enviar email
-
-      AuthEmail.sendEmailConfirmation({
-        email: user.email,
-        name: user.name,
-        token: token.token,
-      }); //GUARDAR USUARIO
-
-      await user.save(); // Guarda el usuario en la base de datos
-
-      await token.save(); // Guarda el token en la base de datos
-
-      res.send("Se envio un nuevo token a tu e-mail");
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({ error: "Hubo un error creando la cuenta" });
+            res.send('Se envió un nuevo token a tu e-mail')
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' })
+        }
     }
-  };
 
-  //RESTABLECER CONTRASEÑA
-  static forgotPassword = async (req: Request, res: Response) => {
-    try {
-      const user = await User.findOne({ email: req.body.email }); //VALIDAR QUE EL EMAIL NO ESTE REPETIDO
+    static forgotPassword = async (req: Request, res: Response) => {
+        try {
+            const { email } = req.body
 
-      if (!user) {
-        const error = new Error("El usuario no esta registrado");
+            // Usuario existe
+            const user = await User.findOne({ email })
+            if (!user) {
+                const error = new Error('El Usuario no esta registrado')
+                return res.status(404).json({ error: error.message })
+            }
 
-        return res.status(409).json({ error: error.message }); //-> 409 Conflict
-      } //GENERAR TOKEN
+            // Generar el token
+            const token = new Token()
+            token.token = generateToken()
+            token.user = user.id
+            await token.save()
 
-      const token = new Token();
-
-      const generatedToken = await Math.floor(
-        100000 + Math.random() * 900000
-      ).toString();
-
-      token.token = generatedToken;
-
-      token.user = user.id; //Enviar email
-
-      AuthEmail.sendPasswordResetToken({
-        email: user.email,
-        name: user.name,
-        token: token.token,
-      }); //GUARDAR USUARIO
-
-      await user.save(); // Guarda el usuario en la base de datos
-
-      await token.save(); // Guarda el token en la base de datos
-
-      res.send("Se envio un nuevo token a tu e-mail");
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({ error: "Hubo un error creando la cuenta" });
+            // enviar el email
+            AuthEmail.sendPasswordResetToken({
+                email: user.email,
+                name: user.name,
+                token: token.token
+            })
+            res.send('Revisa tu email para instrucciones')
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' })
+        }
     }
-  };
 
-  //VALIDAR TOKEN
-  static validateToken = async (req: Request, res: Response) => {
-    try {
-      const tokenExists = await Token.findOne({ token: req.body.token });
+    static validateToken = async (req: Request, res: Response) => {
+        try {
+            const { token } = req.body
 
-      if (!tokenExists) {
-        return res.status(404).json({ error: "Token no encontrado" });
-      }
-
-      res.send("Token validado, puedes cambiar tu contraseña");
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({ error: "Hubo un error validando el token" });
+            const tokenExists = await Token.findOne({ token })
+            if (!tokenExists) {
+                const error = new Error('Token no válido')
+                return res.status(404).json({ error: error.message })
+            }
+            res.send('Token válido, Define tu nuevo password')
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' })
+        }
     }
-  };
 
-  //ACTUALIZAR CONTRASEÑA
-  static updatePasswordWithToken = async (req: Request, res: Response) => {
-    try {
-      const tokenExists = await Token.findOne({ token: req.params.token });
+    static updatePasswordWithToken = async (req: Request, res: Response) => {
+        try {
+            const { token } = req.params
+            const { password } = req.body
 
-      if (!tokenExists) {
-        return res.status(404).json({ error: "Token no encontrado" });
-      }
+            const tokenExists = await Token.findOne({ token })
+            if (!tokenExists) {
+                const error = new Error('Token no válido')
+                return res.status(404).json({ error: error.message })
+            }
 
-      const user = await User.findById(tokenExists.user);
+            const user = await User.findById(tokenExists.user)
+            user.password = await hashPassword(password)
 
-      if (!user) {
-        return res.status(404).json({ error: "Usuario no encontrado" });
-      } //HASHEAR PASSWORDS //await pausa la ejecucion de la funcion hasta que se complete el salt
+            await Promise.allSettled([user.save(), tokenExists.deleteOne()])
 
-      const salt = await bcrypt.genSalt(10); // Genera un salt para encriptar la contraseña antes de hashearla //await pausa la ejecucion de la funcion hasta que se complete el hash
-
-      user.password = await bcrypt.hash(req.body.password, salt); // Hashea la contraseña antes de guardarla en la base de datos
-
-      user.save();
-
-      tokenExists.deleteOne();
-
-      res.send("El password se modifico correctamente");
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({ error: "Hubo un error actualizando la pass" });
+            res.send('El password se modificó correctamente')
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' })
+        }
     }
-  }
-  
+
+    static user = async (req: Request, res: Response) => {
+        return res.json(req.user)
+    }
+
+    static updateProfile = async (req: Request, res: Response) => {
+        const { name, email } = req.body
+
+        const userExists = await User.findOne({email})
+        if(userExists && userExists.id.toString() !== req.user.id.toString() ) {
+            const error = new Error('Ese email ya esta registrado')
+            return res.status(409).json({error: error.message})
+        }
+
+        req.user.name = name
+        req.user.email = email
+
+        try {
+            await req.user.save()
+            res.send('Perfil actualizado correctamente')
+        } catch (error) {
+            res.status(500).send('Hubo un error')
+        }
+    }
+
+    static updateCurrentUserPassword = async (req: Request, res: Response) => {
+        const { current_password, password } = req.body
+
+        const user = await User.findById(req.user.id)
+
+        const isPasswordCorrect = await checkPassword(current_password, user.password)
+        if(!isPasswordCorrect) {
+            const error = new Error('El Password actual es incorrecto')
+            return res.status(401).json({error: error.message})
+        }
+
+        try {
+            user.password = await hashPassword(password)
+            await user.save()
+            res.send('El Password se modificó correctamente')
+        } catch (error) {
+            res.status(500).send('Hubo un error')
+        }
+    } 
+
+    static checkPassword = async (req: Request, res: Response) => {
+        const { password } = req.body
+
+        const user = await User.findById(req.user.id)
+
+        const isPasswordCorrect = await checkPassword(password, user.password)
+        if(!isPasswordCorrect) {
+            const error = new Error('El Password es incorrecto')
+            return res.status(401).json({error: error.message})
+        }
+
+        res.send('Password Correcto')
+    }
 }

@@ -1,121 +1,118 @@
-import { Router } from "express";
+import { Router } from 'express'
+import { body, param } from 'express-validator'
+import { AuthController } from '../controllers/AuthController'
+import { handleInputErrors } from '../middleware/validation'
+import { authenticate } from '../middleware/auth'
 
-import { AuthController } from "../controllers/AuthController";
+const router = Router()
 
-import { body, param } from "express-validator";
+router.post('/create-account',
+    body('name')
+        .notEmpty().withMessage('El nombre no puede ir vacio'),
+    body('password')
+        .isLength({ min: 8 }).withMessage('El password es muy corto, minimo 8 caracteres'),
+    body('password_confirmation').custom((value, { req }) => {
+        if (value !== req.body.password) {
+            throw new Error('Los Password no son iguales')
+        }
+        return true
+    }),
+    body('email')
+        .isEmail().withMessage('E-mail no válido'),
+    handleInputErrors,
+    AuthController.createAccount
+)
 
-import { handleInputErrors } from "../middleware/validation";
+router.post('/confirm-account',
+    body('token')
+        .notEmpty().withMessage('El Token no puede ir vacio'),
+    handleInputErrors,
+    AuthController.confirmAccount
+)
 
-const router = Router();
+router.post('/login',
+    body('email')
+        .isEmail().withMessage('E-mail no válido'),
+    body('password')
+        .notEmpty().withMessage('El password no puede ir vacio'),
+    handleInputErrors,
+    AuthController.login
+)
 
-//Aqui iran todas las rutas de autenticacion
+router.post('/request-code',
+    body('email')
+        .isEmail().withMessage('E-mail no válido'),
+    handleInputErrors,
+    AuthController.requestConfirmationCode
+)
 
-//Crear cuenta
-router.post(
-  "/create-account",
-  body("name").notEmpty().withMessage("El nombre es obligatorio"),
-  body("password")
-    .isLength({ min: 8 })
-    .withMessage(
-      "El password es obligatorio y debe tener al menos 8 caracteres"
-    ),
-  body("password_confirmation").custom((value, { req }) => {
-    //Si el campo password_confirmation no es igual al campo password, se envia un mensaje de error
-    if (value !== req.body.password) {
-      throw new Error("Las contraseñas no coinciden");
-    }
-    return true;
-  }),
-  body("email").isEmail().withMessage("Agrega un correo valido"),
-  handleInputErrors, //Utiliza el middleware para manejar los errores
-  AuthController.createAccount //Llama al controlador para loguear al usuario en caso de que no haya errores
-);
+router.post('/forgot-password',
+    body('email')
+        .isEmail().withMessage('E-mail no válido'),
+    handleInputErrors,
+    AuthController.forgotPassword
+)
 
-//Confirmar cuenta
-router.post(
-  "/confirm-account",
-  body("token").notEmpty().withMessage("El token es obligatorio"),
-  handleInputErrors,
-  AuthController.confirmAccount
-);
+router.post('/validate-token',
+    body('token')
+        .notEmpty().withMessage('El Token no puede ir vacio'),
+    handleInputErrors,
+    AuthController.validateToken
+)
 
-//Iniciar sesion
-router.post(
-  "/login",
+router.post('/update-password/:token',
+    param('token')
+        .isNumeric().withMessage('Token no válido'),
+    body('password')
+        .isLength({ min: 8 }).withMessage('El password es muy corto, minimo 8 caracteres'),
+    body('password_confirmation').custom((value, { req }) => {
+        if (value !== req.body.password) {
+            throw new Error('Los Password no son iguales')
+        }
+        return true
+    }),
+    handleInputErrors,
+    AuthController.updatePasswordWithToken
+)
 
-  body("email").isEmail().withMessage("Agrega un correo valido"),
+router.get('/user',
+    authenticate,
+    AuthController.user
+)
 
-  body("password").notEmpty().withMessage("El password es obligatorio"),
+/** Profile */
+router.put('/profile',
+    authenticate,
+    body('name')
+        .notEmpty().withMessage('El nombre no puede ir vacio'),
+    body('email')
+        .isEmail().withMessage('E-mail no válido'),
+    handleInputErrors,
+    AuthController.updateProfile
+)
 
-  handleInputErrors,
+router.post('/update-password',
+    authenticate,
+    body('current_password')
+        .notEmpty().withMessage('El password actual no puede ir vacio'),
+    body('password')
+        .isLength({ min: 8 }).withMessage('El password es muy corto, minimo 8 caracteres'),
+    body('password_confirmation').custom((value, { req }) => {
+        if (value !== req.body.password) {
+            throw new Error('Los Password no son iguales')
+        }
+        return true
+    }),
+    handleInputErrors,
+    AuthController.updateCurrentUserPassword
+)
 
-  AuthController.login
-);
+router.post('/check-password',
+    authenticate,
+    body('password')
+        .notEmpty().withMessage('El password no puede ir vacio'),
+    handleInputErrors,
+    AuthController.checkPassword
+)
 
-//SOLICITAR NUEVO CODIGO DE CONFIRMACION
-router.post(
-  "/request-code",
-
-  body("email").isEmail().withMessage("Agrega un correo valido"),
-
-  handleInputErrors,
-
-  AuthController.requestConfirmationCode
-);
-
-//REESTABLECER CONTRASEÑA
-router.post(
-  "/forgot-password",
-
-  body("email").isEmail().withMessage("Agrega un correo valido"),
-
-  handleInputErrors,
-
-  AuthController.forgotPassword
-);
-
-//VALIDAR TOKEN
-router.post(
-  "/validate-token",
-
-  body("token").notEmpty().withMessage("El token es obligatorio"),
-
-  handleInputErrors,
-
-  AuthController.validateToken
-);
-
-//ACTUALIZAR CONTRASEÑA
-router.post(
-  "/update-password/:token",
-
-  param("token").isNumeric().withMessage("Token no valido"),
-
-  body("password")
-    .isLength({ min: 8 })
-    .withMessage(
-      "El password es obligatorio y debe tener al menos 8 caracteres"
-    ) /*
-    
-        value = es el valor que se esta enviando el usuario en el campo password_confirmation
-    
-        req = es la request que se esta enviando. Sirve para poder compararlo con otro campo (en este caso password)
-    
-        */,
-
-  body("password_confirmation").custom((value, { req }) => {
-    //Si el campo password_confirmation no es igual al campo password, se envia un mensaje de error
-
-    if (value !== req.body.password) {
-      throw new Error("Las contraseñas no coinciden");
-    }
-
-    return true;
-  }),
-
-  handleInputErrors,
-
-  AuthController.updatePasswordWithToken
-);
-
-export default router;
+export default router
