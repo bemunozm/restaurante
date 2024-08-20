@@ -37,7 +37,7 @@ router.get('/get-products',
 
 //Obtener un producto
 router.get('/get-product/:id',
-    body('id')
+    param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     authenticate,
     handleInputErrors,
@@ -46,7 +46,7 @@ router.get('/get-product/:id',
 
 //Actualizar un producto
 router.post('/update-product/:id',
-    body('id')
+    param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
         body('name')
         .notEmpty().withMessage('El nombre no puede ir vacio'),
@@ -68,7 +68,7 @@ router.post('/update-product/:id',
 
 //Eliminar un producto
 router.delete('/delete-product/:id',
-    body('id')
+    param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     authenticate,
     handleInputErrors,
