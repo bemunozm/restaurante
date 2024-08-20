@@ -14,17 +14,17 @@ router.post('/create-ingredient',
         .notEmpty().withMessage('El nombre no puede ir vacío'),
     body('stockQuantity')
         .isInt({ gt: 0 }).withMessage('El stock no puede ser negativo')
-        .notEmpty().withMessage('Debes agregar un stcock'),
+        .notEmpty().withMessage('Debes agregar un stock'),
     body('unit')
         .notEmpty().withMessage('Debes agregar una unidad de medida'),
-    authenticate,
+    // authenticate,
     handleInputErrors,
     IngredientController.createIngredient
 )
 
 // Obtener todos los ingredientes
 router.get('/get-ingredients',
-    authenticate,
+    // authenticate,
     handleInputErrors,
     IngredientController.getIngredients
 )

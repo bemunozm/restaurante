@@ -5,7 +5,7 @@ import Product from '../models/Product';
 export class ProductController {
 
     static createProduct = async (req: Request, res: Response) => {
-
+        
         try {
             const product = new Product(req.body);
             await product.save();

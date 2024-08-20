@@ -12,7 +12,8 @@ type ProductIngredient = {
 export type ProductType = Document & {
     name: string;
     price: number;
-    image: string;
+    about: string;
+    image?: string;
     categoryId: PopulatedDoc<CategoryType & Document>;
     ingredients: ProductIngredient[];
 };
@@ -21,7 +22,8 @@ export type ProductType = Document & {
 const ProductSchema: Schema = new Schema({
     name: { type: String, required: true, trim: true },
     price: { type: Number, required: true, trim: true },
-    image: { type: String, required: true, trim: true },
+    image: { type: String, required: false, trim: true },
+    about: { type: String, required: true, trim: true },
     categoryId: { type: Types.ObjectId, ref: "Category", required: true, index: true },
     ingredients: [
         {

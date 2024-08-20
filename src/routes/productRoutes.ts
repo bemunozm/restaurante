@@ -16,14 +16,14 @@ router.post('/create-product',
     body('price')
         .isInt({ gt: 0 }).withMessage('El precio debe ser un número entero positivo')
         .notEmpty().withMessage('El precio no puede estar vacío'),
-    body('image')
-        .notEmpty().withMessage('La imagen no puede estar vacía'),
+    // body('image')
+    //     .notEmpty().withMessage('La imagen no puede estar vacía'),
     body('categoryId')
         .isMongoId().withMessage('La categoría debe ser un ID de Mongo válido')
          .notEmpty().withMessage('La categoría no puede estar vacía'),
      body('ingredients')
          .isArray().withMessage('Los ingredientes deben ser un arreglo'), 
-    authenticate,
+    // authenticate,
     handleInputErrors,
     ProductController.createProduct
 )
