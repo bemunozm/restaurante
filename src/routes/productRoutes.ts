@@ -3,6 +3,7 @@ import { body, param } from 'express-validator'
 import { handleInputErrors } from '../middleware/validation'
 import { authenticate } from '../middleware/auth'
 import Product from '../models/Product'
+import { ProductController } from '../controllers/ProductController'
 
 const router = Router()
 
@@ -17,12 +18,11 @@ router.post('/create-product',
         .notEmpty().withMessage('El precio no puede estar vacío'),
     body('image')
         .notEmpty().withMessage('La imagen no puede estar vacía'),
-        //LUEGO DE AGREGAR EL MODELO DE CATEGORIAS Y DE INGREDIENTES, AGREGAR VALIDACIONES PARA ELLOS
-    // body('categoryId')
-    //     .isMongoId().withMessage('La categoría debe ser un ID de Mongo válido')
-    //     .notEmpty().withMessage('La categoría no puede estar vacía'),
-    // body('ingredients')
-    //     .isArray().withMessage('Los ingredientes deben ser un arreglo'), 
+    body('categoryId')
+        .isMongoId().withMessage('La categoría debe ser un ID de Mongo válido')
+         .notEmpty().withMessage('La categoría no puede estar vacía'),
+     body('ingredients')
+         .isArray().withMessage('Los ingredientes deben ser un arreglo'), 
     authenticate,
     handleInputErrors,
     ProductController.createProduct
@@ -55,12 +55,12 @@ router.post('/update-product/:id',
         .notEmpty().withMessage('El precio no puede estar vacío'),
     body('image')
         .notEmpty().withMessage('La imagen no puede estar vacía'),
-        //LUEGO DE AGREGAR EL MODELO DE CATEGORIAS Y DE INGREDIENTES, AGREGAR VALIDACIONES PARA ELLOS
-    // body('categoryId')
-    //     .isMongoId().withMessage('La categoría debe ser un ID de Mongo válido')
-    //     .notEmpty().withMessage('La categoría no puede estar vacía'),
-    // body('ingredients')
-    //     .isArray().withMessage('Los ingredientes deben ser un arreglo'), 
+        
+     body('categoryId')
+         .isMongoId().withMessage('La categoría debe ser un ID de Mongo válido')
+         .notEmpty().withMessage('La categoría no puede estar vacía'),
+     body('ingredients')
+         .isArray().withMessage('Los ingredientes deben ser un arreglo'), 
     authenticate,
     handleInputErrors,
     ProductController.updateProduct
