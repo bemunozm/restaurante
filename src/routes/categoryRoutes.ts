@@ -53,4 +53,5 @@ router.delete('/delete-category/:id',
     CategoryController.deleteCategory
 )
 
+//Cierra #2
 export default router
