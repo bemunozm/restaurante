@@ -1,5 +1,4 @@
 import type { Request, Response } from 'express';
-import User from '../models/User';
 import Product from '../models/Product';
 
 
