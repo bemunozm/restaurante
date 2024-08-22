@@ -3,6 +3,7 @@ import { body, param } from 'express-validator'
 import { handleInputErrors } from '../middleware/validation'
 import { authenticate } from '../middleware/auth'
 import { CategoryController } from '../controllers/CategoryController'
+import upload from '../config/multer'
 
 const router = Router()
 
@@ -10,6 +11,7 @@ const router = Router()
 
 //Crear una categoría
 router.post('/create-category',
+    upload.single('image'),
     body('name')
         .notEmpty().withMessage('El nombre no puede ir vacio'),
     // authenticate,
@@ -28,18 +30,19 @@ router.get('/get-categories',
 router.get('/get-category/:id',
     param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
-    authenticate,
+    // authenticate,
     handleInputErrors,
     CategoryController.getCategory
 )
 
 //Actualizar una categoría
 router.post('/update-category/:id',
+    upload.single('image'),
     param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     body('name')
         .notEmpty().withMessage('El nombre no puede ir vacio'),
-    authenticate,
+    // authenticate,
     handleInputErrors,
     CategoryController.updateCategory
 )
@@ -48,7 +51,7 @@ router.post('/update-category/:id',
 router.delete('/delete-category/:id',
     param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
-    authenticate,
+    // authenticate,
     handleInputErrors,
     CategoryController.deleteCategory
 )
