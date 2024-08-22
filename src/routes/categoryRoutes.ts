@@ -12,14 +12,14 @@ const router = Router()
 router.post('/create-category',
     body('name')
         .notEmpty().withMessage('El nombre no puede ir vacio'),
-    authenticate,
+    // authenticate,
     handleInputErrors,
     CategoryController.createCategory
 )
 
 //Obtener todas las categorías
 router.get('/get-categories',
-    authenticate,
+    // authenticate,
     handleInputErrors,
     CategoryController.getCategories
 )

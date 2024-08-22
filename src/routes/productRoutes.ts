@@ -4,6 +4,7 @@ import { handleInputErrors } from '../middleware/validation'
 import { authenticate } from '../middleware/auth'
 import Product from '../models/Product'
 import { ProductController } from '../controllers/ProductController'
+import upload from '../config/multer'
 
 const router = Router()
 
@@ -11,19 +12,20 @@ const router = Router()
 
 //Crear un producto
 router.post('/create-product',
+    upload.single('image'),
     body('name')
         .notEmpty().withMessage('El nombre no puede ir vacio'),
     body('price')
         .isInt({ gt: 0 }).withMessage('El precio debe ser un número entero positivo')
         .notEmpty().withMessage('El precio no puede estar vacío'),
-    body('image')
-        .notEmpty().withMessage('La imagen no puede estar vacía'),
+    // body('image')
+    //     .notEmpty().withMessage('La imagen no puede estar vacía'),
     body('categoryId')
         .isMongoId().withMessage('La categoría debe ser un ID de Mongo válido')
          .notEmpty().withMessage('La categoría no puede estar vacía'),
      body('ingredients')
          .isArray().withMessage('Los ingredientes deben ser un arreglo'), 
-    authenticate,
+    // authenticate,
     handleInputErrors,
     ProductController.createProduct
 )
@@ -53,9 +55,6 @@ router.post('/update-product/:id',
     body('price')
         .isInt({ gt: 0 }).withMessage('El precio debe ser un número entero positivo')
         .notEmpty().withMessage('El precio no puede estar vacío'),
-    body('image')
-        .notEmpty().withMessage('La imagen no puede estar vacía'),
-        
      body('categoryId')
          .isMongoId().withMessage('La categoría debe ser un ID de Mongo válido')
          .notEmpty().withMessage('La categoría no puede estar vacía'),
