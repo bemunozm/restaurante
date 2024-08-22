@@ -3,6 +3,7 @@ import { body, param } from 'express-validator'
 import { handleInputErrors } from '../middleware/validation'
 import { authenticate } from '../middleware/auth'
 import { IngredientController } from '../controllers/IngredientController'
+import upload from '../config/multer'
 
 const router = Router()
 
@@ -10,6 +11,7 @@ const router = Router()
 
 // Crear un ingrediente
 router.post('/create-ingredient',
+    upload.single('image'),
     body('name')
         .notEmpty().withMessage('El nombre no puede ir vacío'),
     body('stockQuantity')
@@ -33,13 +35,14 @@ router.get('/get-ingredients',
 router.get('/get-ingredient/:id',
     param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
-    authenticate,
+    // authenticate,
     handleInputErrors,
     IngredientController.getIngredient
 )
 
 // Actualizar un ingrediente
 router.post('/update-ingredient/:id',
+    upload.single('image'),
     param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     body('name')
@@ -49,7 +52,7 @@ router.post('/update-ingredient/:id',
         .notEmpty().withMessage('Debes agregar un stcock'),
     body('unit')
         .notEmpty().withMessage('Debes agregar una unidad de medida'),
-    authenticate,
+    // authenticate,
     handleInputErrors,
     IngredientController.updateIngredient
 )
@@ -58,7 +61,7 @@ router.post('/update-ingredient/:id',
 router.delete('/delete-ingredient/:id',
     param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
-    authenticate,
+    // authenticate,
     handleInputErrors,
     IngredientController.deleteIngredient
 )

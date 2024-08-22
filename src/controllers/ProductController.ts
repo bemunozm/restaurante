@@ -59,16 +59,32 @@ export class ProductController {
     }
 
     static updateProduct = async (req: Request, res: Response) => {
-
         try {
-            const product = await Product.findByIdAndUpdate(req.params.id, req.body)
-            if (!product) {
-                return res.status(404).send('Producto no encontrado');
+            const { id } = req.params;
+            const updateData = req.body;
+    
+            // Verificar si se envió una nueva imagen
+            if (req.file) {
+                updateData.image = `/uploads/images/${req.file.filename}`; // Actualiza la ruta de la imagen
             }
-            res.status(200).send('Producto actualizado exitosamente');
+    
+            // Asegurar que ciertos campos sean del tipo correcto
+            if (updateData.price) {
+                updateData.price = parseInt(updateData.price); // Asegurar que el precio sea un número
+            }
+    
+            // Si es necesario, realiza otras conversiones o validaciones aquí
+    
+            const product = await Product.findByIdAndUpdate(id, updateData, { new: true });
+            
+            if (!product) {
+                return res.status(404).json({ message: 'Producto no encontrado' });
+            }
+    
+            res.status(200).json({ message: 'Producto actualizado exitosamente', product });
         } catch (error) {
-            console.log(error);
-            res.status(500).send('Error al actualizar el producto');
+            console.error(error);
+            res.status(500).json({ message: 'Error al actualizar el producto' });
         }
     }
 

@@ -5,8 +5,22 @@ export class IngredientController {
 
     static createIngredient = async (req: Request, res: Response) => {
         try {
-            const ingredient = new Ingredient(req.body);
+            const { name, stockQuantity, unit } = req.body;
+            
+            const ingredientData: any = {
+                name,
+                stockQuantity,
+                unit,
+            };
+
+            // Verifica si hay un archivo de imagen en la solicitud
+            if (req.file) {
+                ingredientData.image = `/uploads/images/${req.file.filename}`;
+            }
+
+            const ingredient = new Ingredient(ingredientData);
             await ingredient.save();
+
             res.status(201).send('Ingrediente creado exitosamente');
         } catch (error) {
             console.log(error);
@@ -14,6 +28,30 @@ export class IngredientController {
         }
     }
 
+    static updateIngredient = async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            const updateData = req.body;
+
+            // Verifica si se envió una nueva imagen
+            if (req.file) {
+                updateData.image = `/uploads/images/${req.file.filename}`;
+            }
+
+            const ingredient = await Ingredient.findByIdAndUpdate(id, updateData, { new: true });
+
+            if (!ingredient) {
+                return res.status(404).send('Ingrediente no encontrado');
+            }
+
+            res.status(200).send('Ingrediente actualizado exitosamente');
+        } catch (error) {
+            console.log(error);
+            res.status(500).send('Error al actualizar el ingrediente');
+        }
+    }
+
+    // Los otros métodos permanecen sin cambios
     static getIngredients = async (req: Request, res: Response) => {
         try {
             const ingredients = await Ingredient.find();
@@ -34,19 +72,6 @@ export class IngredientController {
         } catch (error) {
             console.log(error);
             res.status(500).send('Error al obtener el ingrediente');
-        }
-    }
-
-    static updateIngredient = async (req: Request, res: Response) => {
-        try {
-            const ingredient = await Ingredient.findByIdAndUpdate(req.params.id, req.body);
-            if (!ingredient) {
-                return res.status(404).send('Ingrediente no encontrado');
-            }
-            res.status(200).send('Ingrediente actualizado exitosamente');
-        } catch (error) {
-            console.log(error);
-            res.status(500).send('Error al actualizar el ingrediente');
         }
     }
 

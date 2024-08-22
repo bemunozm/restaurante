@@ -32,7 +32,7 @@ router.post('/create-product',
 
 //Obtener todos los productos
 router.get('/get-products',
-    authenticate,
+    // authenticate,
     handleInputErrors,
     ProductController.getProducts
 )
@@ -41,13 +41,14 @@ router.get('/get-products',
 router.get('/get-product/:id',
     param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
-    authenticate,
+    // authenticate,
     handleInputErrors,
     ProductController.getProduct
 )
 
 //Actualizar un producto
 router.post('/update-product/:id',
+    upload.single('image'),
     param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
         body('name')
@@ -60,7 +61,7 @@ router.post('/update-product/:id',
          .notEmpty().withMessage('La categoría no puede estar vacía'),
      body('ingredients')
          .isArray().withMessage('Los ingredientes deben ser un arreglo'), 
-    authenticate,
+    // authenticate,
     handleInputErrors,
     ProductController.updateProduct
 )
@@ -69,7 +70,7 @@ router.post('/update-product/:id',
 router.delete('/delete-product/:id',
     param('id')
         .isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
-    authenticate,
+    // authenticate,
     handleInputErrors,
     ProductController.deleteProduct
 )
