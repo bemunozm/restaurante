@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import Product from '../models/Product';
 import upload from '../config/multer';
+import Category from '../models/Category';
 
 
 export class ProductController {
@@ -101,4 +102,26 @@ export class ProductController {
             res.status(500).send('Error al eliminar el producto');
         }
     }
+
+    static getProductsByCategory = async (req: Request, res: Response) => {
+    try {
+        let category;
+
+        if (req.params.categoryName) {
+            category = await Category.findOne({ name: req.params.categoryName });
+        } else {
+            category = await Category.findOne();
+        }
+
+        if (!category) {
+            return res.status(404).send('Categoría no encontrada');
+        }
+
+        const products = await Product.find({ categoryId: category._id });
+        res.status(200).send(products);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Error al obtener los productos');
+    }
+}
 }

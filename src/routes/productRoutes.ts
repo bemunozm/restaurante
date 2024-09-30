@@ -75,5 +75,11 @@ router.delete('/delete-product/:id',
     ProductController.deleteProduct
 )
 
+//Obtener productos por categoría
+router.get('/get-products-by-category/:categoryName?',
+    // authenticate,
+    handleInputErrors,
+    ProductController.getProductsByCategory
+)
 
 export default router
