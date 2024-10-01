@@ -5,6 +5,7 @@ import { checkPassword, hashPassword } from '../utils/auth';
 import { generateToken } from '../utils/token';
 import { AuthEmail } from '../emails/AuthEmail';
 import { generateJWT } from '../utils/jwt';
+import Role from '../models/Role';
 
 export class AuthController {
 
@@ -19,8 +20,16 @@ export class AuthController {
                 return res.status(409).json({ error: error.message })
             }
 
+            // Asignar el rol por defecto para los clientes
+            const defaultRole = await Role.findOne({ name: 'user' });
+            if (!defaultRole) {
+                const error = new Error('Rol por defecto no encontrado');
+                return res.status(500).json({ error: error.message });
+            }
+
             // Crea un usuario
             const user = new User(req.body)
+            user.roles = [defaultRole.id] // Asignar el rol por defecto
 
             // Hash Password
             user.password = await hashPassword(password)
@@ -43,6 +52,60 @@ export class AuthController {
             res.status(500).json({ error: 'Hubo un error' })
         }
     }
+
+    //CREAR UNA CUENTA CON DIFERENTES ROLES (COCINA, MESERO, ADMINISTRADOR)
+    static createAccountByAdmin = async (req: Request, res: Response) => {
+        try {
+            const { email, roleName } = req.body;
+
+            // Prevenir duplicados
+            const userExists = await User.findOne({ email });
+            if (userExists) {
+                const error = new Error('El Usuario ya está registrado');
+                return res.status(409).json({ error: error.message });
+            }
+
+            // Buscar el rol especificado
+            const role = await Role.findOne({ id: roleName });
+            if (!role) {
+                const error = new Error(`Rol ${roleName} no encontrado`);
+                return res.status(404).json({ error: error.message });
+            }
+
+            //Crear contraseña aleatoria temporal
+            const password = generateToken();
+            // Hash Password
+            const encryptedPassword = await hashPassword(password)
+
+            // Crear el usuario sin contraseña (se asignará después mediante la recuperación)
+            const user = new User({
+                email,
+                name: req.body.name,
+                password: encryptedPassword,
+                roles: [role._id],
+                confirmed: true, // Se considera que estas cuentas ya están confirmadas
+            });
+
+            // Generar un token de recuperación de contraseña
+            const token = new Token();
+            token.token = generateToken();
+            token.user = user.id;
+
+            // Enviar email de recuperación de contraseña
+            AuthEmail.sendWelcomeEmail({
+                email: user.email,
+                name: user.name,
+                token: token.token,
+            });
+
+            // Guardar usuario y token
+            await Promise.allSettled([user.save(), token.save()]);
+
+            res.send('Cuenta creada para el rol solicitado, se envió un correo de recuperación');
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error al crear la cuenta' });
+        }
+    };
 
     static confirmAccount = async (req: Request, res: Response) => {
         try {
