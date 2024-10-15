@@ -13,14 +13,14 @@ const router = Router();
 //Obtener permisos
 router.get('/permissions',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo administradores pueden obtener la lista de permisos
+    checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo 'Administrador'es pueden obtener la lista de permisos
     RoleController.getPermissions
 );
 
 // Crear un rol 
 router.post('/create-role',
   authenticate, // Solo usuarios autenticados pueden acceder
-  checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo administradores pueden crear roles
+  checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo 'Administrador'es pueden crear roles
   body('name').notEmpty().withMessage('El nombre del rol es obligatorio'),
   body('permissions')
     .isArray().withMessage('Los permisos deben ser un arreglo')
@@ -39,7 +39,7 @@ router.post('/create-role',
 // Obtener todos los roles 
 router.get('/get-roles',
   authenticate, // Solo usuarios autenticados pueden acceder
-  checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo administradores pueden ver los roles
+  checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo 'Administrador'es pueden ver los roles
   handleInputErrors,
   RoleController.getRoles
 );
@@ -47,7 +47,7 @@ router.get('/get-roles',
 // Obtener un rol específico 
 router.get('/get-role/:id',
   authenticate, // Solo usuarios autenticados pueden acceder
-  checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo administradores pueden ver un rol específico
+  checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo 'Administrador'es pueden ver un rol específico
   param('id').isMongoId().withMessage('El ID del rol debe ser un ID de Mongo válido'),
   handleInputErrors,
   RoleController.getRoleById
@@ -56,7 +56,7 @@ router.get('/get-role/:id',
 // Actualizar un rol 
 router.post('/update-role/:id',
   authenticate, // Solo usuarios autenticados pueden acceder
-  checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo administradores pueden actualizar roles
+  checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo 'Administrador'es pueden actualizar roles
   param('id').isMongoId().withMessage('El ID del rol debe ser un ID de Mongo válido'),
   body('name').optional().notEmpty().withMessage('El nombre del rol es obligatorio si se envía'),
   body('permissions')
@@ -78,7 +78,7 @@ router.post('/update-role/:id',
 router.delete(
   '/delete-role/:id',
   authenticate, // Solo usuarios autenticados pueden acceder
-  checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo administradores pueden eliminar roles
+  checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN), // Solo 'Administrador'es pueden eliminar roles
   param('id').isMongoId().withMessage('El ID del rol debe ser un ID de Mongo válido'),
   handleInputErrors,
   RoleController.deleteRole

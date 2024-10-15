@@ -15,7 +15,7 @@ const router = Router()
 //Crear un producto
 router.post('/create-product',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.CREATE_PRODUCT), // Solo administradores pueden crear productos
+    checkPermission(Permissions.CREATE_PRODUCT), // Solo 'Administrador'es pueden crear productos
     upload.single('image'),
     body('name').notEmpty().withMessage('El nombre no puede ir vacío'),
     body('price')
@@ -31,8 +31,6 @@ router.post('/create-product',
 
 //Obtener todos los productos
 router.get('/get-products',
-    authenticate,
-    checkPermission(Permissions.VIEW_PRODUCTS),
     handleInputErrors,
     ProductController.getProducts
 )
@@ -49,7 +47,7 @@ router.get('/get-product/:id',
 //Actualizar un producto
 router.post('/update-product/:id',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.UPDATE_PRODUCT), // Solo administradores pueden actualizar productos
+    checkPermission(Permissions.UPDATE_PRODUCT), // Solo 'Administrador'es pueden actualizar productos
     upload.single('image'),
     param('id').isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     body('name').notEmpty().withMessage('El nombre no puede ir vacío'),
@@ -67,7 +65,7 @@ router.post('/update-product/:id',
 //Eliminar un producto
 router.delete('/delete-product/:id',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.DELETE_PRODUCT), // Solo administradores pueden eliminar productos
+    checkPermission(Permissions.DELETE_PRODUCT), // Solo 'Administrador'es pueden eliminar productos
     param('id').isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     handleInputErrors,
     ProductController.deleteProduct
@@ -75,8 +73,6 @@ router.delete('/delete-product/:id',
 
 //Obtener productos por categoría
 router.get('/get-products-by-category/:categoryName?',
-    authenticate,
-    checkPermission(Permissions.VIEW_PRODUCTS),
     handleInputErrors,
     ProductController.getProductsByCategory
 )

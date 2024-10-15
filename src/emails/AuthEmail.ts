@@ -50,7 +50,7 @@ export class AuthEmail {
             html: `
                 <div style="font-family: Arial, sans-serif; color: #333;">
                     <h2 style="color: #007BFF;">¡Hola ${user.name}!</h2>
-                    <p>Estamos muy emocionados de darte la bienvenida al equipo de <strong>Restaurante</strong>. Tu cuenta ha sido creada por un administrador y ahora eres parte de nuestra familia.</p>
+                    <p>Estamos muy emocionados de darte la bienvenida al equipo de <strong>Restaurante</strong>. Tu cuenta ha sido creada por un 'Administrador' y ahora eres parte de nuestra familia.</p>
                     <p>Para comenzar a usar tu cuenta y definir tu contraseña, por favor haz clic en el siguiente enlace:</p>
                     
                     <a href="${process.env.FRONTEND_URL}/auth/new-password?token=${user.token}" 

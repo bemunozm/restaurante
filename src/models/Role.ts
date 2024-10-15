@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 //Permisos disponibles
 export enum Permissions {
   // Gestión de cuentas
-  CREATE_USER_ACCOUNT_ADMIN = "CREATE_USER_ACCOUNT_ADMIN",  // Permite que un administrador cree cuentas para otros roles
+  CREATE_USER_ACCOUNT_ADMIN = "CREATE_USER_ACCOUNT_ADMIN",  // Permite que un 'Administrador' cree cuentas para otros roles
 
   // Gestión de perfil de usuario autenticado
   VIEW_USER_PROFILE = "VIEW_USER_PROFILE",                 // Ver el perfil del usuario autenticado
@@ -47,7 +47,65 @@ export enum Permissions {
   DELETE_TABLE = "DELETE_TABLE",                            // Eliminar una mesa
 
   //Gestion de roles
+  CREATE_ROLE = "CREATE_ROLE",                             // Crear un rol
+  VIEW_ROLES = "VIEW_ROLES",                               // Ver todos los roles
+  VIEW_ROLE = "VIEW_ROLE",                                 // Ver un rol específico
+  UPDATE_ROLE = "UPDATE_ROLE",                             // Actualizar un rol
+  DELETE_ROLE = "DELETE_ROLE",                              // Eliminar un rol
+  
 }
+
+// Agrupar los permisos en categorías solo para el frontend
+export const permissionGroups = {
+  "Gestión de Usuarios": [
+    Permissions.CREATE_USER_ACCOUNT_ADMIN,
+    Permissions.VIEW_USER_PROFILE,
+    Permissions.UPDATE_USER_PROFILE,
+    Permissions.UPDATE_USER_PASSWORD,
+    Permissions.CHECK_USER_PASSWORD,
+  ],
+  "Gestión de Categorías": [
+    Permissions.CREATE_CATEGORY,
+    Permissions.VIEW_CATEGORIES,
+    Permissions.VIEW_CATEGORY,
+    Permissions.UPDATE_CATEGORY,
+    Permissions.DELETE_CATEGORY,
+  ],
+  "Gestión de Ingredientes": [
+    Permissions.CREATE_INGREDIENT,
+    Permissions.VIEW_INGREDIENTS,
+    Permissions.VIEW_INGREDIENT,
+    Permissions.UPDATE_INGREDIENT,
+    Permissions.DELETE_INGREDIENT,
+  ],
+  "Gestión de Productos": [
+    Permissions.CREATE_PRODUCT,
+    Permissions.VIEW_PRODUCTS,
+    Permissions.VIEW_PRODUCT,
+    Permissions.UPDATE_PRODUCT,
+    Permissions.DELETE_PRODUCT,
+  ],
+  "Gestión de Sesiones": [
+    Permissions.VIEW_SESSIONS,
+    Permissions.VIEW_SESSION,
+    Permissions.UPDATE_SESSION,
+    Permissions.DELETE_SESSION,
+  ],
+  "Gestión de Mesas": [
+    Permissions.CREATE_TABLE,
+    Permissions.VIEW_TABLES,
+    Permissions.VIEW_TABLE,
+    Permissions.UPDATE_TABLE,
+    Permissions.DELETE_TABLE,
+  ],
+  "Gestión de Roles": [
+    Permissions.CREATE_ROLE,
+    Permissions.VIEW_ROLES,
+    Permissions.VIEW_ROLE,
+    Permissions.UPDATE_ROLE,
+    Permissions.DELETE_ROLE,
+  ],
+};
 
 
 export type RoleType = Document & {

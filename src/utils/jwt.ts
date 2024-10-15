@@ -2,24 +2,17 @@ import jwt from 'jsonwebtoken'
 import Types, { ObjectId } from 'mongoose'
 
 type UserPayload = {
-    id: Types.ObjectId
-}
-
-type ClientPayload = {
-    id: string
+    id: string,
+    sessionId?: string,
+    tableId?: string,
+    role: 'Invitado' | 'Usuario',
 }
 
 
 export const generateJWT = (payload: UserPayload) => {
+    const expiresIn = payload.role === 'Invitado' ? '1d' : '180d'
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: '180d'
-    })
-    return token
-}
-
-export const generateClientJWT = (payload: ClientPayload) => {
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: '1d'
+        expiresIn: expiresIn
     })
     return token
 }

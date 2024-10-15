@@ -13,7 +13,7 @@ const router = Router()
 // Crear una mesa
 router.post('/create-table',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.CREATE_TABLE), // Solo administradores o personal autorizado puede crear mesas
+    checkPermission(Permissions.CREATE_TABLE), // Solo 'Administrador'es o personal autorizado puede crear mesas
     body('tableNumber').notEmpty().withMessage('Asigna un número de mesa único')
         .isNumeric().withMessage('El número de mesa debe ser un número'),
     handleInputErrors,
@@ -39,7 +39,7 @@ router.get('/get-table/:id',
 // Actualizar una mesa
 router.post('/update-table/:id',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.UPDATE_TABLE), // Solo administradores o personal autorizado puede actualizar mesas
+    checkPermission(Permissions.UPDATE_TABLE), // Solo 'Administrador'es o personal autorizado puede actualizar mesas
     param('id').isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     body('tableNumber').optional().isNumeric().withMessage('El número de mesa debe ser un número'),
     handleInputErrors,
@@ -49,7 +49,7 @@ router.post('/update-table/:id',
 // Eliminar una mesa
 router.delete('/delete-table/:id',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.DELETE_TABLE), // Solo administradores o personal autorizado puede eliminar mesas
+    checkPermission(Permissions.DELETE_TABLE), // Solo 'Administrador'es o personal autorizado puede eliminar mesas
     param('id').isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     handleInputErrors,
     TableController.deleteTable

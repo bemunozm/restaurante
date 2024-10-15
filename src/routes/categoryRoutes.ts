@@ -15,7 +15,7 @@ const router = Router()
 router.post(
     '/create-category',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.CREATE_CATEGORY), // Solo administradores pueden crear categorías
+    checkPermission(Permissions.CREATE_CATEGORY), // Solo 'Administrador'es pueden crear categorías
     upload.single('image'),
     body('name').notEmpty().withMessage('El nombre no puede ir vacio'),
     handleInputErrors,
@@ -25,8 +25,6 @@ router.post(
 
 //Obtener todas las categorías
 router.get('/get-categories',
-    authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.VIEW_CATEGORIES), // Solo administradores pueden ver las categorías
     handleInputErrors,
     CategoryController.getCategories
 )
@@ -34,7 +32,7 @@ router.get('/get-categories',
 //Obtener una categoría
 router.get('/get-category/:id',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.VIEW_CATEGORY), // Solo administradores pueden ver una categoría específica
+    checkPermission(Permissions.VIEW_CATEGORY), // Solo 'Administrador'es pueden ver una categoría específica
     param('id').isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     handleInputErrors,
     CategoryController.getCategory
@@ -43,7 +41,7 @@ router.get('/get-category/:id',
 //Actualizar una categoría
 router.post('/update-category/:id',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.UPDATE_CATEGORY), // Solo administradores pueden actualizar categorías
+    checkPermission(Permissions.UPDATE_CATEGORY), // Solo 'Administrador'es pueden actualizar categorías
     upload.single('image'),
     param('id').isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     body('name').notEmpty().withMessage('El nombre no puede ir vacio'),
@@ -54,7 +52,7 @@ router.post('/update-category/:id',
 //Eliminar una categoría
 router.delete('/delete-category/:id',
     authenticate, // Solo usuarios autenticados pueden acceder
-    checkPermission(Permissions.DELETE_CATEGORY), // Solo administradores pueden eliminar categorías
+    checkPermission(Permissions.DELETE_CATEGORY), // Solo 'Administrador'es pueden eliminar categorías
     param('id').isMongoId().withMessage('El ID debe ser un ID de Mongo válido'),
     handleInputErrors,
     CategoryController.deleteCategory
