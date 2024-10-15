@@ -5,7 +5,7 @@ import { OrderType, OrderSchema } from "./Order";
 export type GuestType = {
     _id?: Types.ObjectId;
     name: string;
-    email?: string; // Email opcional para futuros usos (fidelización, etc.)
+    user?: Types.ObjectId; // Referencia al usuario (si está autenticado)
     orders: OrderType[]; // Lista de órdenes asociadas a este invitado
 };
 
@@ -15,12 +15,13 @@ export type SessionType = Document & {
     guests: GuestType[]; // Lista de invitados o clientes conectados
     startedAt: Date; // Fecha y hora de inicio de la sesión
     endedAt?: Date; // Fecha y hora de fin de la sesión (opcional)
+    status: 'Activa' | 'Pagando' | 'Finalizada'; // Estado de la sesión
 };
 
 // Esquema para un Invitado/Cliente
 const GuestSchema: Schema = new Schema({
     name: { type: String, required: true },
-    email: { type: String }, // Email opcional del invitado
+    user: { type: Types.ObjectId, ref: "User" }, // Referencia al usuario autenticado
     orders: [OrderSchema] // Lista de órdenes embebidas, basadas en OrderSchema
 });
 
@@ -29,7 +30,8 @@ const SessionSchema: Schema = new Schema({
     tableId: { type: Types.ObjectId, ref: "Table", required: true },
     guests: [GuestSchema], // Array de invitados conectados
     startedAt: { type: Date, default: Date.now }, // Fecha de inicio
-    endedAt: { type: Date } // Fecha de fin, opcional hasta que se complete la sesión
+    endedAt: { type: Date }, // Fecha de fin, opcional hasta que se complete la sesión
+    status: { type: String, enum: ['Activa', 'Pagando', 'Finalizada'], default: 'Activa' }
 });
 
 // Asegurar que solo pueda existir una sesión activa por mesa

@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { body, param } from 'express-validator';
 import { handleInputErrors } from '../middleware/validation';
 import SessionController from '../controllers/SessionController';
-import { authenticateGuest} from "../middleware/auth";
 
 const router = Router();
 
@@ -78,9 +77,13 @@ router.get('/get-session-by-table/:tableId',
     SessionController.checkSessionExists
 );
 
-//Authenticar un cliente
-router.get('/guest',
-    authenticateGuest,
-    SessionController.authenticateGuest
-)
+// Obtener el token de una sesión
+router.get('/get-session-token/:sessionId',
+    param('sessionId')
+        .isMongoId().withMessage('El ID de la sesión debe ser un ID de Mongo válido'),
+    // authenticate,
+    handleInputErrors,
+    SessionController.getSessionToken
+);
+
 export default router;
