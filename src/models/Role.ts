@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 import mongoose from "mongoose";
 
 //Permisos disponibles
@@ -109,6 +109,7 @@ export const permissionGroups = {
 
 
 export type RoleType = Document & {
+  _id: string;
   name: string;
   permissions: string[];
 };

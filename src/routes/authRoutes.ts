@@ -43,6 +43,39 @@ router.post('/create-account-admin',
     AuthController.createAccountByAdmin
 )
 
+router.delete('/delete-user/:id',
+    param('id')
+        .isMongoId().withMessage('El ID debe ser un número'),
+    handleInputErrors,
+    authenticate,
+    AuthController.deleteUserById
+)
+
+router.get('/get-user/:id',
+    param('id')
+        .isMongoId().withMessage('El ID debe ser un número'),
+    handleInputErrors,
+    authenticate,
+    AuthController.getUserById
+)
+
+router.put('/update-user/:id',
+    param('id')
+        .isMongoId().withMessage('El ID debe ser un número'),
+    body('name')
+        .notEmpty().withMessage('El nombre no puede ir vacio'),
+    body('lastname')
+        .notEmpty().withMessage('El apellido no puede ir vacio'),
+    body('email')
+        .isEmail().withMessage('E-mail no válido'),
+    body('roles')
+        .isArray().withMessage('Los roles deben ser un arreglo')
+        .notEmpty().withMessage('Los roles no pueden ir vacios'),
+    handleInputErrors,
+    authenticate,
+    AuthController.updateUserById
+)
+
 router.post('/confirm-account',
     body('token')
         .notEmpty().withMessage('El Token no puede ir vacio'),
@@ -98,6 +131,12 @@ router.post('/update-password/:token',
 router.get('/user',
     authenticate,
     AuthController.user
+)
+
+//Obtener todos los usuarios
+router.get('/users',
+    authenticate,
+    AuthController.getAllUsers
 )
 
 /** Profile */

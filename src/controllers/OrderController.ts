@@ -45,6 +45,26 @@ export class OrderController {
         }
     };
 
+    static getOrders = async (req: Request, res: Response) => {
+        try {
+            const orders = await Order.find()
+                .populate('tableId', 'tableNumber')  // Popula los detalles de los productos
+                .populate('items.productId')  // Popula los detalles de los productos
+                .populate('userId', 'name')    // Popula el nombre del usuario (si existe)
+                .populate('guestId', 'name');  // Popula el nombre del invitado (si existe)
+
+            if (orders.length === 0) {
+                return res.status(404).json({ error: 'No hay órdenes para mostrar' });
+            }
+
+            return res.status(200).json(orders);
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Error al obtener las órdenes' });
+        }
+    }
+
+
     static getOrdersBySessionId = async (req: Request, res: Response) => {
         const { sessionId } = req.params;
     
@@ -57,7 +77,7 @@ export class OrderController {
     
           // Obtener todas las órdenes relacionadas con la sesión
           const orders = await Order.find({ sessionId })
-            .populate('items.productId')  // Popula los detalles de los productos
+            .populate('items.productId tableId')  // Popula los detalles de los productos
             .populate('userId', 'name')    // Popula el nombre del usuario (si existe)
             .populate('guestId', 'name');  // Popula el nombre del invitado (si existe)
     
@@ -110,6 +130,27 @@ export class OrderController {
         }
       };
       
+      //Obtener order por id
+      static getOrderById = async (req: Request, res: Response) => {
+        const { orderId } = req.params;
+      
+        try {
+          const order = await Order.findById(orderId)
+            .populate('tableId', 'tableNumber')  // Popula los detalles de los productos
+            .populate('items.productId')  // Popula los detalles de los productos
+            .populate('userId', 'name')    // Popula el nombre del usuario (si existe)
+            .populate('guestId', 'name');  // Popula el nombre del invitado (si existe)
+      
+          if (!order) {
+            return res.status(404).json({ error: 'Orden no encontrada' });
+          }
+      
+          return res.status(200).json(order);
+        } catch (error) {
+          console.error(error);
+          return res.status(500).json({ error: 'Error al obtener la orden' });
+        }
+      };
 
       // Obtener las órdenes para la cocina basadas en el estado de la sesión y los estados de los items
     static getOrdersForKitchen = async (req: Request, res: Response) => {
@@ -143,4 +184,28 @@ export class OrderController {
           return res.status(500).json({ error: 'Hubo un error al obtener los pedidos para la cocina' });
       }
   };
+
+  // Obtener las órdenes por usuario
+static getOrdersByUserId = async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  try {
+    const orders = await Order.find({ userId })
+      .populate('tableId')    // Popula los detalles de la mesa
+      .populate('userId')     // Popula los detalles del usuario
+      .populate('guestId')    // Popula el invitado, si existe
+      .populate('items.productId');  // Popula los detalles de los productos
+
+    if (orders.length === 0) {
+      return res.status(404).json({ error: 'No hay órdenes para mostrar' });
+    }
+
+    return res.status(200).json(orders);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Error al obtener las órdenes' });
+  }
+}
+
+        
 }

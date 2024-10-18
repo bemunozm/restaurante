@@ -11,6 +11,7 @@ export type GuestType = {
 
 // Tipo de datos para una Sesión
 export type SessionType = Document & {
+    _id: Types.ObjectId;
     tableId: Types.ObjectId; // Referencia a la mesa
     guests: GuestType[]; // Lista de invitados o clientes conectados
     startedAt: Date; // Fecha y hora de inicio de la sesión

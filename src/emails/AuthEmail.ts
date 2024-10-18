@@ -53,13 +53,13 @@ export class AuthEmail {
                     <p>Estamos muy emocionados de darte la bienvenida al equipo de <strong>Restaurante</strong>. Tu cuenta ha sido creada por un 'Administrador' y ahora eres parte de nuestra familia.</p>
                     <p>Para comenzar a usar tu cuenta y definir tu contraseña, por favor haz clic en el siguiente enlace:</p>
                     
-                    <a href="${process.env.FRONTEND_URL}/auth/new-password?token=${user.token}" 
+                    <a href="${process.env.FRONTEND_URL}/auth/new-password" 
                        style="display: inline-block; padding: 10px 20px; margin: 10px 0; font-size: 16px; color: #fff; background-color: #28a745; border-radius: 5px; text-decoration: none;">
                        Configurar mi contraseña
                     </a>
                     
-                    <p>O copia y pega la siguiente URL en tu navegador:</p>
-                    <p>${process.env.FRONTEND_URL}/auth/new-password?token=${user.token}</p>
+                    <p>El siguiente codigo es Secreto:</p>
+                    <p>Codigo: ${user.token}</p>
                     
                     <p>Este enlace es válido por 10 minutos, así que asegúrate de actualizar tu contraseña lo antes posible.</p>
                     <h3 style="color: #007BFF;">¿Qué puedes esperar?</h3>

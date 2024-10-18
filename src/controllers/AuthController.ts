@@ -5,7 +5,7 @@ import { checkPassword, hashPassword } from '../utils/auth';
 import { generateToken } from '../utils/token';
 import { AuthEmail } from '../emails/AuthEmail';
 import { generateJWT } from '../utils/jwt';
-import Role from '../models/Role';
+import Role, { RoleType } from '../models/Role';
 import Order from '../models/Order';
 import Session from '../models/Session';
 
@@ -89,6 +89,57 @@ export class AuthController {
         }
     };
 
+    static getAllUsers = async (req: Request, res: Response) => {
+        try {
+            const users = await User.find().populate('roles');
+            res.json(users);
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' });
+        }
+    }
+
+    static getUserById = async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            const user = await User.findById(id).populate('roles');
+            if (!user) {
+                return res.status(404).json({ error: 'Usuario no encontrado' });
+            }
+            res.json(user);
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' });
+        }
+    }
+
+    static updateUserById = async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            const { name, lastname, email, roles } = req.body;
+
+            const user = await User.findById(id);
+            if (!user) {
+                return res.status(404).json({ error: 'Usuario no encontrado' });
+            }
+
+            const assignedRoles : RoleType[] = await Role.find({ _id: { $in: roles } });
+            if (assignedRoles.length !== roles.length) {
+                const error = new Error('Uno o más roles no fueron encontrados');
+                return res.status(404).json({ error: error.message });
+              }
+
+            user.name = name;
+            user.lastname = lastname;
+            user.email = email;
+            user.roles = assignedRoles;
+
+            await user.save();
+            res.send('Usuario actualizado correctamente');
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' });
+        }
+    }
+            
+
     //CREAR UNA CUENTA CON DIFERENTES ROLES (COCINA, MESERO, 'Administrador')
     static createAccountByAdmin = async (req: Request, res: Response) => {
         try {
@@ -122,13 +173,14 @@ export class AuthController {
             email,
             password: encryptedPassword,
             roles: assignedRoles.map(role => role._id),  // Asignar múltiples roles
-            confirmed: true, // La cuenta está confirmada por defecto
+            confirmed: false, // La cuenta está confirmada por defecto
           });
     
           // Generar un token de recuperación de contraseña
           const token = new Token();
           token.token = generateToken();
           token.user = user.id;
+          await token.save();
     
           // Enviar el email de bienvenida con el token para que el usuario establezca su contraseña
           AuthEmail.sendWelcomeEmail({
@@ -145,6 +197,23 @@ export class AuthController {
           res.status(500).json({ error: 'Hubo un error al crear la cuenta' });
         }
       };
+
+      static deleteUserById = async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            console.log(id);
+
+            const user = await User.findById(id);
+            if (!user) {
+                return res.status(404).json({ error: 'Usuario no encontrado' });
+            }
+
+            await user.deleteOne();
+            res.send('Usuario eliminado correctamente');
+        } catch (error) {
+            res.status(500).json({ error: 'Hubo un error' });
+        }
+    }
 
     static confirmAccount = async (req: Request, res: Response) => {
         try {
@@ -352,6 +421,10 @@ export class AuthController {
 
             const user = await User.findById(tokenExists.user)
             user.password = await hashPassword(password)
+
+            if(!user.confirmed) {
+                user.confirmed = true
+            }
 
             await Promise.allSettled([user.save(), tokenExists.deleteOne()])
 
