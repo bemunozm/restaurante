@@ -12,7 +12,7 @@ const TokenSchema = new Schema({
     token: { type: String, required: true},
     user: { type: Types.ObjectId, ref: 'User' },
     session: { type: Types.ObjectId, ref: 'Session' },
-    createdAt: { type: Date, default: Date.now(), expires: "1d" }, //expires: "10m" = el token expira en 10 minutos
+    createdAt: { type: Date, default: Date.now, expires: 43200 }, // Expira en 12 horas (43200 segundos)
 });
 
 const Token = mongoose.model<TokenType>('Token', TokenSchema);

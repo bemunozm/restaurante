@@ -9,6 +9,7 @@ import tableRoutes from './routes/tableRoutes';
 import sessionRoutes from './routes/sessionRoutes';
 import roleRoutes from './routes/roleRoutes';
 import orderRoutes from './routes/orderRoutes';
+import transbankRoutes from './routes/transbankRoutes';
 import morgan from 'morgan';
 import cors from 'cors';
 import path from 'path';
@@ -36,6 +37,7 @@ app.use('/api/table', tableRoutes);
 app.use('/api/session', sessionRoutes);
 app.use('/api/role', roleRoutes);
 app.use('/api/order', orderRoutes);
+app.use('/api/transbank', transbankRoutes);
 // Servir las imágenes estáticas
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
