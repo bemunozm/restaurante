@@ -19,6 +19,7 @@ export type OrderType = Document & {
     guestId?: Types.ObjectId; // Nombre del invitado que realizó la orden
     userId?: PopulatedDoc<UserType & Document>; // Email opcional del invitado con el que se aplicaran descuentos en futuro en un modelo de fidelización
     items: OrderItemType[]; // Lista de productos en la orden
+    status: 'Sin Pagar' | 'Pagado' | 'Pendiente';
 };
 
 // Esquema para una Orden
@@ -34,7 +35,8 @@ export const OrderSchema: Schema = new Schema({
             status: { type: String, enum: ['Pendiente', 'En Preparacion', 'Listo', 'Cancelado', 'Entregado'], default: 'Pendiente' },
             comment: { type: String }
         }
-    ]
+    ],
+    status: {type: String, default:'Sin Pagar'},
 }, { timestamps: true });
 
 const Order = mongoose.model<OrderType>("Order", OrderSchema);

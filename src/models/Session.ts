@@ -35,8 +35,6 @@ const SessionSchema: Schema = new Schema({
     status: { type: String, enum: ['Activa', 'Pagando', 'Finalizada'], default: 'Activa' }
 });
 
-// Asegurar que solo pueda existir una sesión activa por mesa
-SessionSchema.index({ tableId: 1, endedAt: 1 }, { unique: true, partialFilterExpression: { endedAt: { $exists: false } } });
 
 const Session = mongoose.model<SessionType>("Session", SessionSchema);
 export default Session;

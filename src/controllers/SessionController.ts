@@ -11,19 +11,20 @@ import User from '../models/User';
 class SessionController {
 
     // Crear una nueva sesión
-
     async createSession(req: Request, res: Response) {
         const { tableId } = req.body;
 
         try {
 
+            //Crear sesion con el id de la mesa al que pertenece
             const newSession = new Session({
                 tableId: tableId,
             });
 
+            // Guardar la sesión en la base de datos
             await newSession.save();
 
-            // Crear la instancia del SessionToken
+            // Crear una contraseña para la sesión
             const newSessionToken = new Token({
                 session: newSession._id,
                 token: generateToken()
@@ -205,10 +206,11 @@ class SessionController {
         const { tableId } = req.params;
     
         try {
-            const session = await Session.findOne({ tableId });
+            //Comprobar si existe una sesion activa
+            const session = await Session.findOne({ tableId, status: 'Activa' });
     
             if (!session) {
-                return res.status(200).json(null);
+                return res.status(404).json('Sesion no disponible');
             }
     
             return res.status(200).json(session);
